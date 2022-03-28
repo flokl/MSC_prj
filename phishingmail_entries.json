@@ -1,2 +1,14 @@
 {
+    "*": ["forward", "report", "delete"],
+    "START": ["open", "ignore"],
+    "open": ["check sender", "download attachment"],
+    "check sender": ["download attachment"],
+    "download attachment": ["open attachment", "ignore attachment", "delete attachment", "check sender"],
+    "open attachment": ["END"],
+    "ignore attachment": ["END"],
+    "delete attachment": ["END"],
+    "report": ["PREVIOUS"],
+    "forward": ["PREVIOUS"],
+    "delete": ["END"],
+    "ignore" : ["END"]
 }
