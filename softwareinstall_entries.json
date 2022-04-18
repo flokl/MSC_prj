@@ -1,0 +1,11 @@
+{
+  "*": ["ask IT"],
+  "START": ["download", "ask IT", "close website"],
+  "download": ["cancel download", "delete download", "install"],
+  "cancel download": ["close website"],
+  "delete download": ["close website"],
+  "install": ["END", "cancel install", "ask IT"],
+  "cancel install": ["delete download"],
+  "ask IT": ["END"],
+  "close website": ["END"]
+}

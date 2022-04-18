@@ -1,0 +1,9 @@
+{
+  "START": ["ask IT", "plug in", "personal use", "give it away", "ask sender", "throw away"],
+  "ask IT": ["END"],
+  "plug in": ["END"],
+  "personal use": ["END"],
+  "give it away": ["END"],
+  "ask sender": ["END"],
+  "throw away": ["END"]
+}
