@@ -21,7 +21,10 @@ def gen_data(json_file_name):
 
         entry = 'START'
         previous_entry = entry
-        # Clone list
+
+        if '*' not in data:
+            data['*'] = ''
+        # Static copy
         always_possible = data['*'][:]
 
         actions = []
