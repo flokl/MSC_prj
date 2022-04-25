@@ -3,18 +3,19 @@ import json
 import random
 
 SCENARIOS_OUTPUT_FILE = "scenario_data.csv"
-TRASH_ENTRY_FILE = "trash_entries.txt"
 
-PHISHINGMAIL_SCENARIO = "phishingmail_entries.json"
-USBPACKAGE_SCENARIO = "usbpackage_entries.json"
-SOFTWAREINSTALL_SCENARIO = "softwareinstall_entries.json"
+SCENARIOS = [
+    "phishingmail_entries.json",
+    "usbpackage_entries.json",
+    "softwareinstall_entries.json"
+]
 
 
 def main():
     actions = []
 
     for i in range(1000):
-        actions.append(gen_data(PHISHINGMAIL_SCENARIO))
+        actions.append(gen_data(SCENARIOS[0]))
     write_csv(SCENARIOS_OUTPUT_FILE, actions)
 
 
