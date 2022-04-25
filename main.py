@@ -11,8 +11,8 @@ SCENARIOS = [
 ]
 
 
-def main():
-    actions = []
+def main() -> None:
+    data = []
 
     for i in range(1000):
         actions = gen_data(SCENARIOS[0])
@@ -22,17 +22,20 @@ def main():
     write_csv(SCENARIOS_OUTPUT_FILE, data)
 
 
-def gen_data(json_file_name):
+def gen_data(json_file_name: str) -> list:
+    """
+    Generates log data based of a directed graph.
+    :param json_file_name: Directed graph of possible actions
+    :return: list of generated data
+    """
+
     with open(json_file_name, "r") as jsonfile:
         data = json.load(jsonfile)
 
         entry = 'START'
         previous_entry = entry
-
-        if '*' not in data:
-            data['*'] = ''
-        # Static copy
-        always_possible = data['*'][:]
+        # Clone list
+        always_possible: list = data['*'][:]
 
         actions = []
 
@@ -49,7 +52,6 @@ def gen_data(json_file_name):
 
             # Add leftover action
             next_entries += always_possible
-
             # Unique options
             next_entries = list(set(next_entries))
 
@@ -62,16 +64,19 @@ def gen_data(json_file_name):
 
             if entry not in data['*']:
                 previous_entry = entry
+
             entry = next_entry
             actions.append(entry)
 
         return actions
 
 
-def read_txt(filename):
+def read_txt(filename: str) -> list:
     data = []
+
     with open(filename, 'r') as input_file:
         data.append(input_file.readline())
+
     return data
 
 
