@@ -15,8 +15,11 @@ def main():
     actions = []
 
     for i in range(1000):
-        actions.append(gen_data(SCENARIOS[0]))
-    write_csv(SCENARIOS_OUTPUT_FILE, actions)
+        actions = gen_data(SCENARIOS[0])
+        random_data = gen_random_data(len(actions[len(actions) - 1]))
+        data.append(mix_log_data(actions, random_data, int(len(random_data) * 0.8), 100))
+
+    write_csv(SCENARIOS_OUTPUT_FILE, data)
 
 
 def gen_data(json_file_name):
@@ -72,7 +75,50 @@ def read_txt(filename):
     return data
 
 
-def write_csv(filename, data):
+def gen_random_data(amount: int) -> list:
+    """
+    Generates random log data
+    :param amount: amount of entries
+    :return: list of length size
+    """
+    random_data = []
+
+    for i in range(0, amount):
+        random_data.append("randomevent" + str(random.randint(0, 1000)))
+
+    return random_data
+
+
+def mix_log_data(log_data1: list, log_data2: list, max_entries_between: int, probability_between: int) -> list:
+    """
+    Mixes log_data2 into log_data1. First line data from log_data1 gets mixed with a random line from log_data2.
+    At maximum max_entries_between get mixed in between two entries of log_data1.
+    :param log_data1: Log data with generated actions
+    :param log_data2: Log with unrelated data
+    :param max_entries_between: Maximum new entries between two entries from log_data1.
+    :param probability_between: Probability at which entries get mixed between two entries from log_data1.
+    :return: list of mixed log_data
+    """
+
+    log_data_mixed = []
+
+    for item_data1 in log_data1:
+        if random.randrange(0, 99, 1) < probability_between:
+            amount = random.randrange(0, max_entries_between, 1)
+            log_data_mixed += ([item_data1] + log_data2[:amount])
+            # Remove mixed entries from list
+            [log_data2.pop(0) for i in log_data2[:amount]]
+        else:
+            log_data_mixed += [item_data1]
+
+    # Append remaining entries
+    # log_data_mixed += log_data2
+
+    return log_data_mixed
+
+
+def write_csv(filename: str, data: list) -> None:
+
     with open(filename, 'w') as output_file:
         for line in data:
             output_file.write(';'.join(line))
