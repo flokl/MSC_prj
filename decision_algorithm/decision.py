@@ -9,7 +9,7 @@ class DecisionNode():
     nextActions: list
 
 
-def readCSV(stringOfCSV): # reads CSV and Puts every line in a list and returns list of list
+def readCSV(stringOfCSV):  # reads CSV and Puts every line in a list and returns list of list
     with open(stringOfCSV, newline='') as f:
         reader = csv.reader(f)
         data = list(reader)
@@ -18,22 +18,24 @@ def readCSV(stringOfCSV): # reads CSV and Puts every line in a list and returns 
         allElementsWithHierarchy.append(i[0].split(';'))
     return allElementsWithHierarchy
 
-def getRelevantItemsFromList(data, percentageOfRelevantData): #takes all items and returns the relevant ones
+
+def getRelevantItemsFromList(data, percentageOfRelevantData):  # takes all items and returns the relevant ones
     allElements = [item for sublist in data for item in sublist]
     singleElements = list(dict.fromkeys(allElements))
     relevantItems = list()
     for i in singleElements:
         count = allElements.count(i)
-        if count >= len(data) * (percentageOfRelevantData/100):
+        if count >= len(data) * (percentageOfRelevantData / 100):
             relevantItems.append(i)
     return relevantItems
 
-def newDTStructure(data,features):
-    cleanStructure=list()
+
+def newDTStructure(data, features):
+    cleanStructure = list()
     for i in data:
-        helpListEntry=list()
+        helpListEntry = list()
         for j in i:
-            if features.count(j)>0:
+            if features.count(j) > 0:
                 helpListEntry.append(j)
         cleanStructure.append(helpListEntry)
     return cleanStructure
