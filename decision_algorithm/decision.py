@@ -76,9 +76,30 @@ def build_depth(action_entries_list, action_list=dict()):
     return action_list
 
 
+def next_probable_action(completed_actions, decision_tree):
+    """
+    Extract the probabilities of the next possible actions based on the previous actions
+    :param completed_actions: actions performed previously
+    :param decision_tree: the complete decision tree
+    :return: actions with probabilities
+    """
+    if not completed_actions:
+        probabilities = dict()
+        sum = 0
+        for action in decision_tree:
+            sum += decision_tree[action].count
+        for action in decision_tree:
+            probabilities[decision_tree[action].action] = decision_tree[action].count / sum
+        return probabilities
+    return next_probable_action(completed_actions[1:], decision_tree[completed_actions[0]].nextActions)
+
+
 csvPath = '../data_gen/scenario_data.csv'
 dataAsListofList = readCSV(csvPath)
 relevantItems = getRelevantItemsFromList(dataAsListofList, 10)
 # print(relevantItems)
 cleanData = newDTStructure(dataAsListofList, relevantItems)
 dt = decision_tree(cleanData)
+probabilities = next_probable_action(['forward', 'report', 'open'], dt)
+print(probabilities)
+# delete 10, open 12, forward 10, ignore 8
