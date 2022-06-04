@@ -94,6 +94,19 @@ def gen_random_data(amount: int) -> list:
     return random_data
 
 
+# TODO Generate Logs
+# TODO Transform to csv
+# TODO Implement combined scenarios
+# TODO Zielwerte?
+
+def gen_log():
+    pass
+
+
+def extract_from_log():
+    pass
+
+
 def mix_log_data(log_data1: list, log_data2: list, max_entries_between: int, probability_between: int) -> list:
     """
     Mixes log_data2 into log_data1. First line data from log_data1 gets mixed with a random line from log_data2.
@@ -111,7 +124,7 @@ def mix_log_data(log_data1: list, log_data2: list, max_entries_between: int, pro
         if random.randrange(0, 99, 1) < probability_between:
             amount = random.randrange(0, max_entries_between, 1)
             log_data_mixed += ([item_data1] + log_data2[:amount])
-            # Remove mixed entries from list
+            # Remove mixed in entries from list
             [log_data2.pop(0) for i in log_data2[:amount]]
         else:
             log_data_mixed += [item_data1]
