@@ -1,5 +1,12 @@
 
 import csv
+from typing import NamedTuple
+
+class DecisionNode(NamedTuple):
+    count: int
+    action: str
+    nextActions: list
+
 
 def readCSV(stringOfCSV): # reads CSV and Puts every line in a list and returns list of list
     with open(stringOfCSV, newline='') as f:
@@ -28,17 +35,26 @@ def newDTStructure(data,features):
             if features.count(j)>0:
                 helpListEntry.append(j)
         cleanStructure.append(helpListEntry)
-    return
-
-
+    return cleanStructure
 
 def decisionTree(data,features):
-    
-    for i in data:
-        for j in i:
+   # depth=0
+    #actionList=list()
+    #for actionEntriesList in data:
+     #   for actionEntries in actionEntriesList:
+      #      actionList.append(DecisionNode())
+   count=0;
+   allcounts=list()
+   #for feature in features:
+   actionList = list()
+   for actionEntries in data:
+       if actionEntries[0] in actionList:
+           actionList[actionEntries[0]] += 1
+       else:
+           actionList.append(actionEntries[0])
+   print(actionList)
 
-
-    return
+   return
 
 
 csvPath='../data_gen/scenario_data.csv'
@@ -46,5 +62,6 @@ dataAsListofList=readCSV(csvPath)
 relevantItems=getRelevantItemsFromList(dataAsListofList, 10)
 print(relevantItems)
 decisionTree(newDTStructure(dataAsListofList,relevantItems),relevantItems)
+
 
 
