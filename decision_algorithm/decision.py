@@ -1,10 +1,11 @@
-
 import csv
-from typing import NamedTuple
+from dataclasses import dataclass
 
-class DecisionNode(NamedTuple):
-    count: int
+
+@dataclass
+class DecisionNode():
     action: str
+    count: int
     nextActions: list
 
 
@@ -37,31 +38,45 @@ def newDTStructure(data,features):
         cleanStructure.append(helpListEntry)
     return cleanStructure
 
-def decisionTree(data,features):
-   # depth=0
-    #actionList=list()
-    #for actionEntriesList in data:
-     #   for actionEntries in actionEntriesList:
-      #      actionList.append(DecisionNode())
-   count=0;
-   allcounts=list()
-   #for feature in features:
-   actionList = list()
-   for actionEntries in data:
-       if actionEntries[0] in actionList:
-           actionList[actionEntries[0]] += 1
-       else:
-           actionList.append(actionEntries[0])
-   print(actionList)
 
-   return
+def decision_tree(data):
+    """
+    Build a tree out of a 2d array
+    :param data: 2d array of actions
+    :return: trees structure of DecisionNode's
+    """
+
+    action_list = dict()
+
+    for action_entries_list in data:
+        action_list = build_depth(action_entries_list, action_list)
+
+    return action_list
 
 
-csvPath='../data_gen/scenario_data.csv'
-dataAsListofList=readCSV(csvPath)
-relevantItems=getRelevantItemsFromList(dataAsListofList, 10)
-print(relevantItems)
-decisionTree(newDTStructure(dataAsListofList,relevantItems),relevantItems)
+def build_depth(action_entries_list, action_list=dict()):
+    """
+    Traverse a single scenario line into the deep until the last action and build the DecisionNode's
+    :param action_entries_list: scenario line with actions
+    :param action_list: DecisionNode action list
+    :return: DecisionNode action list
+    """
+
+    if not action_entries_list:
+        return
+
+    if action_entries_list[0] in action_list:
+        action_list[action_entries_list[0]].count += 1
+    else:
+        action_list[action_entries_list[0]] = DecisionNode(action_entries_list[0], 1, dict())
+
+    build_depth(action_entries_list[1:], action_list[action_entries_list[0]].nextActions)
+    return action_list
 
 
-
+csvPath = '../data_gen/scenario_data.csv'
+dataAsListofList = readCSV(csvPath)
+relevantItems = getRelevantItemsFromList(dataAsListofList, 10)
+# print(relevantItems)
+cleanData = newDTStructure(dataAsListofList, relevantItems)
+dt = decision_tree(cleanData)
