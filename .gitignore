@@ -1,2 +1,5 @@
+.gitignore
 **/.idea/
-scenario_data.csv
+venv
+
+data_gen/scenario_data.csv
