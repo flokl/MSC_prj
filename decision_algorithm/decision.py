@@ -5,22 +5,46 @@ def readCSV(stringOfCSV): # reads CSV and Puts every line in a list and returns 
     with open(stringOfCSV, newline='') as f:
         reader = csv.reader(f)
         data = list(reader)
-    return data
-
-def getRelevantItemsFromList(data): #takes all items and returns the relevant ones
     allElementsWithHierarchy = list()
     for i in data:
         allElementsWithHierarchy.append(i[0].split(';'))
-    allElements = [item for sublist in allElementsWithHierarchy for item in sublist]
+    return allElementsWithHierarchy
+
+def getRelevantItemsFromList(data, percentageOfRelevantData): #takes all items and returns the relevant ones
+    allElements = [item for sublist in data for item in sublist]
     singleElements = list(dict.fromkeys(allElements))
     relevantItems = list()
     for i in singleElements:
         count = allElements.count(i)
-        if count >= len(allElementsWithHierarchy) / 10:
+        if count >= len(data) * (percentageOfRelevantData/100):
             relevantItems.append(i)
     return relevantItems
 
+def newDTStructure(data,features):
+    cleanStructure=list()
+    for i in data:
+        helpListEntry=list()
+        for j in i:
+            if features.count(j)>0:
+                helpListEntry.append(j)
+        cleanStructure.append(helpListEntry)
+    return
+
+
+
+def decisionTree(data,features):
+    
+    for i in data:
+        for j in i:
+
+
+    return
+
+
 csvPath='../data_gen/scenario_data.csv'
 dataAsListofList=readCSV(csvPath)
-relevantItems=getRelevantItemsFromList(dataAsListofList)
+relevantItems=getRelevantItemsFromList(dataAsListofList, 10)
 print(relevantItems)
+decisionTree(newDTStructure(dataAsListofList,relevantItems),relevantItems)
+
+
