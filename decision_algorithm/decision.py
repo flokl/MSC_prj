@@ -8,13 +8,18 @@ class DecisionNode():
     nextActions: list
 
 
-def readCSV(stringOfCSV):  # reads CSV and Puts every line in a list and returns list of list
+def readCSV(stringOfCSV):
+    """
+    reads CSV file and returns a list of lists
+    :param stringOfCSV: 
+    :return: list of lists
+    """
     with open(stringOfCSV, newline='') as f:
         reader = csv.reader(f)
         data = list(reader)
     allElementsWithHierarchy = list()
-    for i in data:
-        allElementsWithHierarchy.append(i[0].split(';'))
+    for entry in data:
+        allElementsWithHierarchy.append(entry[0].split(';'))
     return allElementsWithHierarchy
 
 
@@ -24,7 +29,7 @@ def getRelevantItemsFromList(data, expectedFeatures, percentageOfRelevantData): 
     :param data: all elements as list
     :param expectedFeatures: Determines how many features are expected
     :param percentageOfRelevantData: Start point of percentage in how many scenarios a feature should be expected
-    :return:
+    :return: extracted relevant features
     """
     if percentageOfRelevantData<1:
         expectedFeatures-=1
@@ -46,6 +51,12 @@ def getRelevantItemsFromList(data, expectedFeatures, percentageOfRelevantData): 
 
 
 def newDTStructure(data, features):
+    """
+    inputs raw list of lists and relevant features and cleans non relevant features out of the structure
+    :param data: list of lists
+    :param features: relevant features
+    :return: cleaned structure with only relevant features
+    """
     cleanStructure = list()
     for i in data:
         helpListEntry = list()
