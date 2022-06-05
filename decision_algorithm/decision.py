@@ -1,7 +1,6 @@
 import csv
 from dataclasses import dataclass
 
-
 @dataclass
 class DecisionNode():
     action: str
@@ -19,7 +18,17 @@ def readCSV(stringOfCSV):  # reads CSV and Puts every line in a list and returns
     return allElementsWithHierarchy
 
 
-def getRelevantItemsFromList(data, percentageOfRelevantData):  # takes all items and returns the relevant ones
+def getRelevantItemsFromList(data, expectedFeatures, percentageOfRelevantData):  # takes all items and returns the relevant ones
+    """
+    Gets all Elements and searches for the labels that are most likely features.
+    :param data: all elements as list
+    :param expectedFeatures: Determines how many features are expected
+    :param percentageOfRelevantData: Start point of percentage in how many scenarios a feature should be expected
+    :return:
+    """
+    if percentageOfRelevantData<1:
+        expectedFeatures-=1
+        percentageOfRelevantData=100
     allElements = [item for sublist in data for item in sublist]
     singleElements = list(dict.fromkeys(allElements))
     relevantItems = list()
@@ -27,6 +36,10 @@ def getRelevantItemsFromList(data, percentageOfRelevantData):  # takes all items
         count = allElements.count(i)
         if count >= len(data) * (percentageOfRelevantData / 100):
             relevantItems.append(i)
+    if len(relevantItems)<expectedFeatures:
+        relevantItems=getRelevantItemsFromList(data, expectedFeatures, percentageOfRelevantData - 1)
+    else:
+        print("found %d Features. With a Relevance Percentage of %d " % (len(relevantItems), percentageOfRelevantData))
     return relevantItems
 
 
@@ -37,7 +50,8 @@ def newDTStructure(data, features):
         for j in i:
             if features.count(j) > 0:
                 helpListEntry.append(j)
-        cleanStructure.append(helpListEntry)
+        if helpListEntry:
+            cleanStructure.append(helpListEntry)
     return cleanStructure
 
 
@@ -96,10 +110,10 @@ def next_probable_action(completed_actions, decision_tree):
 
 csvPath = '../data_gen/scenario_data.csv'
 dataAsListofList = readCSV(csvPath)
-relevantItems = getRelevantItemsFromList(dataAsListofList, 10)
+relevantItems = getRelevantItemsFromList(dataAsListofList, 8, 20)
 # print(relevantItems)
 cleanData = newDTStructure(dataAsListofList, relevantItems)
 dt = decision_tree(cleanData)
-probabilities = next_probable_action(['forward', 'report', 'open'], dt)
+probabilities = next_probable_action(['report', 'open'], dt)
 print(probabilities)
 # delete 10, open 12, forward 10, ignore 8
