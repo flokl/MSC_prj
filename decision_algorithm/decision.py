@@ -40,6 +40,8 @@ def getRelevantItemsFromList(data, expectedFeatures, percentageOfRelevantData): 
         relevantItems=getRelevantItemsFromList(data, expectedFeatures, percentageOfRelevantData - 1)
     else:
         print("found %d Features. With a Relevance Percentage of %d " % (len(relevantItems), percentageOfRelevantData))
+        for feature in relevantItems:
+            print(feature)
     return relevantItems
 
 
