@@ -1,5 +1,6 @@
 import csv
 from dataclasses import dataclass
+from decimal import Decimal
 
 @dataclass
 class DecisionNode():
@@ -121,6 +122,62 @@ def next_probable_action(completed_actions, decision_tree):
     return next_probable_action(completed_actions[1:], decision_tree[completed_actions[0]].nextActions)
 
 
+def next_probable_paths_list(decision_tree, completed_actions=[], depth=0):
+    """
+    Create a sorted list of possible paths with their corresponding probabilities.
+    :param decision_tree: complete decision tree
+    :param completed_actions: actions after which the tree list starts
+    :param depth: unused
+    :return: sorted list of action paths and probabilities
+    """
+    action_path_node_list = probability_paths_tree(decision_tree, completed_actions)
+    probable_path_list = dict()
+    for action_path_node in action_path_node_list:
+        probable_path_list[action_path_node.action] = action_path_node.probability
+    return dict(sorted(probable_path_list.items(), key=lambda x: x[1], reverse=True))
+
+
+@dataclass
+class ActionPathNode():
+    action: str
+    probability: Decimal
+
+
+def probability_paths_tree(decision_tree, completed_actions=[]):
+    """
+    Traverse the tree until the starting point (after all completed_actions) is reached.
+    From this new starting point traverse each path until a leave is reached and
+    save the path of actions taken with the corresponding probabilities.
+    :param decision_tree: the complete decision tree of possible actions
+    :param completed_actions: the actions already completed and the starting point of the foreshadowing
+    :return: a list of nodes with the corresponding probabilities
+    """
+
+    # Go to right position in tree
+    if completed_actions:
+        return probability_paths_tree(decision_tree[completed_actions[0]].nextActions, completed_actions[1:])
+
+    if not decision_tree:
+        ActionPathNode.action = ""
+        ActionPathNode.probability = 1
+        return [ActionPathNode]
+
+    sum = 0
+    for action in decision_tree:
+        sum += decision_tree[action].count
+
+    next_action_path_list = list()
+    for action in decision_tree:
+        next_action_path_node_list = probability_paths_tree(decision_tree[action].nextActions)
+        for next_action_path in next_action_path_node_list:
+            action_path_node = ActionPathNode('', -1)
+            action_path_node.action = decision_tree[action].action + "," + next_action_path.action
+            probability = decision_tree[action].count / sum
+            action_path_node.probability = probability * next_action_path.probability
+            next_action_path_list.append(action_path_node)
+    return next_action_path_list
+
+
 csvPath = '../data_gen/scenario_data.csv'
 dataAsListofList = readCSV(csvPath)
 relevantItems = getRelevantItemsFromList(dataAsListofList, 8, 20)
@@ -130,3 +187,5 @@ dt = decision_tree(cleanData)
 probabilities = next_probable_action(['report', 'open'], dt)
 print(probabilities)
 # delete 10, open 12, forward 10, ignore 8
+next_paths = next_probable_paths_list(dt, ['report', 'open', 'forward'])
+print(next_paths)
