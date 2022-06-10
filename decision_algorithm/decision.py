@@ -1,72 +1,114 @@
 import csv
+import sys
 from dataclasses import dataclass
 from decimal import Decimal
 
+
 @dataclass
-class DecisionNode():
+class DecisionNode:
     action: str
     count: int
     nextActions: list
 
 
-def readCSV(stringOfCSV):
+@dataclass
+class ActionPathNode:
+    action: str
+    probability: Decimal
+
+
+def define_csv_path(pre_defined_csv_path):
+    """
+
+    :param pre_defined_csv_path:
+    :return:
+    """
+    input_bool = False
+    while not input_bool:
+        custom_path = input(
+            "Please enter the path to the csv file you want to analyse. If no input is entered the default file %s "
+            "will be used [ENTER]\n" % pre_defined_csv_path)
+        if custom_path == "":
+            return pre_defined_csv_path
+        else:
+            try:
+                read_csv(custom_path)
+                return custom_path
+            except:
+                print("An error occurred, please try again")
+
+
+def read_csv(string_of_csv):
     """
     reads CSV file and returns a list of lists
-    :param stringOfCSV: 
+    :param string_of_csv:
     :return: list of lists
     """
-    with open(stringOfCSV, newline='') as f:
+    with open(string_of_csv, newline='') as f:
         reader = csv.reader(f)
         data = list(reader)
-    allElementsWithHierarchy = list()
+    all_elements_with_hierarchy = list()
     for entry in data:
-        allElementsWithHierarchy.append(entry[0].split(';'))
-    return allElementsWithHierarchy
+        all_elements_with_hierarchy.append(entry[0].split(';'))
+    return all_elements_with_hierarchy
 
 
-def getRelevantItemsFromList(data, expectedFeatures, percentageOfRelevantData):  # takes all items and returns the relevant ones
+def get_relevant_items_from_list(data, expected_features,
+                                 percentage_of_relevant_data):  # takes all items and returns the relevant ones
     """
-    Gets all Elements and searches for the labels that are most likely features.
+    Gets all Elements and searches for the labels that are most likely features. To create a decision tree the
+    percentage has to be over 2%
     :param data: all elements as list
-    :param expectedFeatures: Determines how many features are expected
-    :param percentageOfRelevantData: Start point of percentage in how many scenarios a feature should be expected
+    :param expected_features: Determines how many features are expected
+    :param percentage_of_relevant_data: Start point of percentage in how many scenarios a feature should be expected
     :return: extracted relevant features
     """
-    if percentageOfRelevantData<1:
-        expectedFeatures-=1
-        percentageOfRelevantData=100
-    allElements = [item for sublist in data for item in sublist]
-    singleElements = list(dict.fromkeys(allElements))
-    relevantItems = list()
-    for i in singleElements:
-        count = allElements.count(i)
-        if count >= len(data) * (percentageOfRelevantData / 100):
-            relevantItems.append(i)
-    if len(relevantItems)<expectedFeatures:
-        relevantItems=getRelevantItemsFromList(data, expectedFeatures, percentageOfRelevantData - 1)
+    if percentage_of_relevant_data < 1:
+        expected_features -= 1
+        percentage_of_relevant_data = 100
+    all_elements = [item for sublist in data for item in sublist]
+    single_elements = list(dict.fromkeys(all_elements))
+    relevant_items = list()
+    for i in single_elements:
+        count = all_elements.count(i)
+        if count >= len(data) * (percentage_of_relevant_data / 100):
+            relevant_items.append(i)
+    if len(relevant_items) < expected_features and percentage_of_relevant_data > 2:
+        relevant_items = get_relevant_items_from_list(data, expected_features, percentage_of_relevant_data - 1)
     else:
-        print("found %d Features. With a Relevance Percentage of %d " % (len(relevantItems), percentageOfRelevantData))
-        for feature in relevantItems:
-            print(feature)
-    return relevantItems
+        print("Found %d Features. With a relevance of %d %%" % (len(relevant_items),
+                                                                percentage_of_relevant_data))
+    return relevant_items
 
 
-def newDTStructure(data, features):
+def print_relevant_items(relevant_items):
+    """
+
+    :param relevant_items:
+    :return:
+    """
+    counter = 1
+    for feature in relevant_items:
+        print("%d: %s" % (counter, feature))
+        counter += 1
+
+
+def new_dt_structure(data, features):
     """
     inputs raw list of lists and relevant features and cleans non relevant features out of the structure
     :param data: list of lists
     :param features: relevant features
     :return: cleaned structure with only relevant features
     """
-    cleanStructure = list()
+    clean_structure = list()
     for i in data:
-        helpListEntry = list()
+        help_list_entry = list()
         for j in i:
             if features.count(j) > 0:
-                helpListEntry.append(j)
-        if helpListEntry:
-            cleanStructure.append(helpListEntry)
-    return cleanStructure
+                help_list_entry.append(j)
+        if help_list_entry:
+            clean_structure.append(help_list_entry)
+    return clean_structure
 
 
 def decision_tree(data):
@@ -104,88 +146,216 @@ def build_depth(action_entries_list, action_list=dict()):
     return action_list
 
 
-def next_probable_action(completed_actions, decision_tree):
+def next_probable_action(completed_actions, decision_tree_used):
     """
     Extract the probabilities of the next possible actions based on the previous actions
     :param completed_actions: actions performed previously
-    :param decision_tree: the complete decision tree
+    :param decision_tree_used: the complete decision tree
     :return: actions with probabilities
     """
     if not completed_actions:
         probabilities = dict()
         sum = 0
-        for action in decision_tree:
-            sum += decision_tree[action].count
-        for action in decision_tree:
-            probabilities[decision_tree[action].action] = decision_tree[action].count / sum
+        for action in decision_tree_used:
+            sum += decision_tree_used[action].count
+        for action in decision_tree_used:
+            probabilities[decision_tree_used[action].action] = decision_tree_used[action].count / sum
         return probabilities
-    return next_probable_action(completed_actions[1:], decision_tree[completed_actions[0]].nextActions)
+    try:
+        return next_probable_action(completed_actions[1:], decision_tree_used[completed_actions[0]].nextActions)
+    except:
+        print("No probable actions were found")
+        sys.exit()
 
 
-def next_probable_paths_list(decision_tree, completed_actions=[], depth=0):
+def next_probable_paths_list(decision_tree_used, completed_actions=[], depth=0):
     """
     Create a sorted list of possible paths with their corresponding probabilities.
-    :param decision_tree: complete decision tree
+    :param decision_tree_used: complete decision tree
     :param completed_actions: actions after which the tree list starts
     :param depth: unused
     :return: sorted list of action paths and probabilities
     """
-    action_path_node_list = probability_paths_tree(decision_tree, completed_actions)
+    action_path_node_list = probability_paths_tree(decision_tree_used, completed_actions)
     probable_path_list = dict()
     for action_path_node in action_path_node_list:
         probable_path_list[action_path_node.action] = action_path_node.probability
-    return dict(sorted(probable_path_list.items(), key=lambda x: x[1], reverse=True))
+    try:
+        return dict(sorted(probable_path_list.items(), key=lambda x: x[1], reverse=True))
+    except:
+        print("No probable paths were found")
+        sys.exit()
 
 
-@dataclass
-class ActionPathNode():
-    action: str
-    probability: Decimal
+def check_user_input(expected_int):
+    """
+
+    :param expected_int:
+    :return:
+    """
+    try:
+        val = int(expected_int)
+        return val
+    except ValueError:
+        return 0
 
 
-def probability_paths_tree(decision_tree, completed_actions=[]):
+def probability_paths_tree(decision_tree_used, completed_actions=[]):
     """
     Traverse the tree until the starting point (after all completed_actions) is reached.
     From this new starting point traverse each path until a leave is reached and
     save the path of actions taken with the corresponding probabilities.
-    :param decision_tree: the complete decision tree of possible actions
+    :param decision_tree_used: the complete decision tree of possible actions
     :param completed_actions: the actions already completed and the starting point of the foreshadowing
     :return: a list of nodes with the corresponding probabilities
     """
 
     # Go to right position in tree
     if completed_actions:
-        return probability_paths_tree(decision_tree[completed_actions[0]].nextActions, completed_actions[1:])
+        try:
+            return probability_paths_tree(decision_tree_used[completed_actions[0]].nextActions, completed_actions[1:])
+        except:
+            print("No probable paths were found")
+            sys.exit()
 
-    if not decision_tree:
+    if not decision_tree_used:
         ActionPathNode.action = ""
         ActionPathNode.probability = 1
         return [ActionPathNode]
 
     sum = 0
-    for action in decision_tree:
-        sum += decision_tree[action].count
+    for action in decision_tree_used:
+        sum += decision_tree_used[action].count
 
     next_action_path_list = list()
-    for action in decision_tree:
-        next_action_path_node_list = probability_paths_tree(decision_tree[action].nextActions)
+    for action in decision_tree_used:
+        next_action_path_node_list = probability_paths_tree(decision_tree_used[action].nextActions)
         for next_action_path in next_action_path_node_list:
             action_path_node = ActionPathNode('', -1)
-            action_path_node.action = decision_tree[action].action + "," + next_action_path.action
-            probability = decision_tree[action].count / sum
+            action_path_node.action = decision_tree_used[action].action + "," + next_action_path.action
+            probability = decision_tree_used[action].count / sum
             action_path_node.probability = probability * next_action_path.probability
             next_action_path_list.append(action_path_node)
-    return next_action_path_list
+    try:
+        return next_action_path_list
+    except:
+        print("No probable paths were found")
+        sys.exit()
 
 
-csvPath = '../data_gen/scenario_data.csv'
-dataAsListofList = readCSV(csvPath)
-relevantItems = getRelevantItemsFromList(dataAsListofList, 8, 20)
-# print(relevantItems)
-cleanData = newDTStructure(dataAsListofList, relevantItems)
+def choose_amount_of_features(count_of_pre_defined_features):
+    """
+
+    :param count_of_pre_defined_features:
+    :return:
+    """
+    choose_features = input(
+        "Please enter how much features you are expecting in the chosen file that will be relevant. Default of %d is "
+        "used if non-valid or no input is entered [ENTER]\n" % count_of_pre_defined_features)
+    if check_user_input(choose_features) > 0:
+        return check_user_input(choose_features)
+    else:
+        return count_of_pre_defined_features
+
+
+def choose_amount_of_percentage(percentage_of_pre_defined_percentage):
+    """
+
+    :param percentage_of_pre_defined_percentage:
+    :return:
+    """
+    choose_percentage = input(
+        "Please enter in %% how many rows you are expecting the features you want to extract (min 2%%, max 100%%). "
+        "Default of %d is used if non-valid or no input is entered [ENTER]\n" % percentage_of_pre_defined_percentage)
+    if 1 < check_user_input(choose_percentage) < 101:
+        return check_user_input(choose_percentage)
+    else:
+        return percentage_of_pre_defined_percentage
+
+
+def determine_next_steps(possible_steps):
+    """
+
+    :param possible_steps:
+    :return:
+    """
+    count_of_next_steps = check_user_input(
+        input("How many steps were already taken? Wrong inputs will be ignored.[ENTER]\n"))
+    list_of_steps = list()
+    for i in range(count_of_next_steps):
+        print_relevant_items(possible_steps)
+        input_number = check_user_input(
+            input("Please choose %d. step that was already taken (Default: 1) [ENTER]\n" % (i + 1)))
+        if 0 < input_number < len(possible_steps) + 1:
+            list_of_steps.append(possible_steps[input_number - 1])
+        else:
+            list_of_steps.append(possible_steps[0])
+    print("Steps that will be used as pre given:")
+    counter = 1
+    for item in list_of_steps:
+        print("#%d: %s" % (counter, item))
+        counter += 1
+    return list_of_steps
+
+
+def get_percentage(input_double):
+    return input_double * 100
+
+
+def print_next_actions_and_paths(probabilities, paths, default_max_paths):
+    """
+
+    :param probabilities:
+    :param paths:
+    :param default_max_paths:
+    :return:
+    """
+    counter_probabilities = 1
+    counter_paths = 1
+
+    print("The %d most probable next steps are:" % len(probabilities))
+    probabilities_sorted = sorted(probabilities, key=probabilities.get, reverse=True)
+    for probable_entries in probabilities_sorted:
+        print("#%d: %s with %.2f%% probability" % (
+            counter_probabilities, probable_entries, get_percentage(probabilities.get(probable_entries))))
+        counter_probabilities += 1
+
+    max_amount = check_user_input(
+        input("How many probable paths, of the %d found do you want to print? Wrong inputs are "
+              "ignored (Default: %d) [ENTER]\n" % (len(paths), default_max_paths)))
+    if(max_amount<1):
+        max_amount=default_max_paths
+    if len(paths) < max_amount:
+        print("The %d most probable paths are:" % len(paths))
+    else:
+        print("The %d most probable paths are:" % max_amount)
+    for probable_paths in paths:
+        print("#%d: %s with %.2f%% probability" % (
+            counter_paths, probable_paths[:-1], get_percentage(paths.get(probable_paths))))
+        counter_paths += 1
+        if counter_paths > max_amount:
+            return
+
+
+pre_defined_features = 9
+pre_defined_percentage = 20
+pre_defined_print_path_entries = 10
+pre_defined_csv_path = '../data_gen/scenario_data.csv'
+
+try:
+    data_as_list_of_list = read_csv(define_csv_path(pre_defined_csv_path))
+except:
+    print("An error occurred. Please check configuration and restart program")
+    sys.exit()
+
+target_features = choose_amount_of_features(pre_defined_features)
+target_percentage = choose_amount_of_percentage(pre_defined_percentage)
+print("It will be searched for %d Features with a percentage of %d percent. It is possible that depending on the data "
+      "and the %% more or less features will be found \n Processing...\n" % (target_features, target_percentage))
+relevant_items = get_relevant_items_from_list(data_as_list_of_list, target_features, target_percentage)
+next_steps = determine_next_steps(relevant_items)
+cleanData = new_dt_structure(data_as_list_of_list, relevant_items)
 dt = decision_tree(cleanData)
-probabilities = next_probable_action(['report', 'open'], dt)
-print(probabilities)
-# delete 10, open 12, forward 10, ignore 8
-next_paths = next_probable_paths_list(dt, ['report', 'open', 'forward'])
-print(next_paths)
+probabilities = next_probable_action(next_steps, dt)
+next_paths = next_probable_paths_list(dt, next_steps)
+print_next_actions_and_paths(probabilities, next_paths, pre_defined_print_path_entries)
