@@ -17,19 +17,27 @@ class ActionPathNode:
     probability: Decimal
 
 
-def define_csv_path(pre_defined_csv_path):
+def get_percentage(input_float):
     """
+    :param input_float: inputs float value
+    :return: float value multiplied by 100
+    """
+    return input_float * 100
 
-    :param pre_defined_csv_path:
-    :return:
+
+def define_csv_path(input_pre_defined_csv_path):
+    """
+    Asks user which csv file should be opened
+    :param input_pre_defined_csv_path: pre defined csv
+    :return: path to user demanded csv file
     """
     input_bool = False
     while not input_bool:
         custom_path = input(
             "Please enter the path to the csv file you want to analyse. If no input is entered the default file %s "
-            "will be used [ENTER]\n" % pre_defined_csv_path)
+            "will be used [ENTER]\n" % input_pre_defined_csv_path)
         if custom_path == "":
-            return pre_defined_csv_path
+            return input_pre_defined_csv_path
         else:
             try:
                 read_csv(custom_path)
@@ -81,14 +89,14 @@ def get_relevant_items_from_list(data, expected_features,
     return relevant_items
 
 
-def print_relevant_items(relevant_items):
+def print_relevant_items(relevant_items_to_print):
     """
-
-    :param relevant_items:
-    :return:
+    Outputs the found relevant items
+    :param relevant_items_to_print: list of relevant items
+    :return: NULL
     """
     counter = 1
-    for feature in relevant_items:
+    for feature in relevant_items_to_print:
         print("%d: %s" % (counter, feature))
         counter += 1
 
@@ -189,9 +197,9 @@ def next_probable_paths_list(decision_tree_used, completed_actions=[], depth=0):
 
 def check_user_input(expected_int):
     """
-
-    :param expected_int:
-    :return:
+    checks if user has inputed int value
+    :param expected_int: input of user
+    :return: returns 0 if user has typed in no positive int, otherwise returns the typed in int
     """
     try:
         val = int(expected_int)
@@ -245,9 +253,9 @@ def probability_paths_tree(decision_tree_used, completed_actions=[]):
 
 def choose_amount_of_features(count_of_pre_defined_features):
     """
-
-    :param count_of_pre_defined_features:
-    :return:
+    Asks user how many features are expected in the file
+    :param count_of_pre_defined_features: pre defined amount of features
+    :return: amount of features the file should be searched for
     """
     choose_features = input(
         "Please enter how much features you are expecting in the chosen file that will be relevant. Default of %d is "
@@ -260,9 +268,9 @@ def choose_amount_of_features(count_of_pre_defined_features):
 
 def choose_amount_of_percentage(percentage_of_pre_defined_percentage):
     """
-
-    :param percentage_of_pre_defined_percentage:
-    :return:
+    Asks user in what amount of rows the searched features should appear
+    :param percentage_of_pre_defined_percentage: pre defined value
+    :return: percentage of rows that should contain features
     """
     choose_percentage = input(
         "Please enter in %% how many rows you are expecting the features you want to extract (min 2%%, max 100%%). "
@@ -275,9 +283,9 @@ def choose_amount_of_percentage(percentage_of_pre_defined_percentage):
 
 def determine_next_steps(possible_steps):
     """
-
-    :param possible_steps:
-    :return:
+    Gets a list of possible steps that can be made. Asks user how many steps have already been made and fills list with that steps that have been made
+    :param possible_steps: list of possible steps that can be made
+    :return: list of steps that have already be made
     """
     count_of_next_steps = check_user_input(
         input("How many steps were already taken? Wrong inputs will be ignored.[ENTER]\n"))
@@ -298,40 +306,37 @@ def determine_next_steps(possible_steps):
     return list_of_steps
 
 
-def get_percentage(input_double):
-    return input_double * 100
-
-
-def print_next_actions_and_paths(probabilities, paths, default_max_paths):
+def print_next_actions_and_paths(probabilities_to_print, paths_to_print, default_max_paths):
     """
+    Sorts the next probabilities and prints them from high probability to low, then asks how many paths should be printed and prints the most probable paths depending on the input
 
-    :param probabilities:
-    :param paths:
-    :param default_max_paths:
-    :return:
+    :param probabilities_to_print: dictionary with most probable next steps
+    :param paths_to_print: dictionary with most probable next paths
+    :param default_max_paths: default parameter of paths that should be printed
+    :return: NULL
     """
     counter_probabilities = 1
     counter_paths = 1
 
-    print("The %d most probable next steps are:" % len(probabilities))
-    probabilities_sorted = sorted(probabilities, key=probabilities.get, reverse=True)
+    print("The %d most probable next steps are:" % len(probabilities_to_print))
+    probabilities_sorted = sorted(probabilities_to_print, key=probabilities_to_print.get, reverse=True)
     for probable_entries in probabilities_sorted:
         print("#%d: %s with %.2f%% probability" % (
-            counter_probabilities, probable_entries, get_percentage(probabilities.get(probable_entries))))
+            counter_probabilities, probable_entries, get_percentage(probabilities_to_print.get(probable_entries))))
         counter_probabilities += 1
 
     max_amount = check_user_input(
         input("How many probable paths, of the %d found do you want to print? Wrong inputs are "
-              "ignored (Default: %d) [ENTER]\n" % (len(paths), default_max_paths)))
-    if(max_amount<1):
-        max_amount=default_max_paths
-    if len(paths) < max_amount:
-        print("The %d most probable paths are:" % len(paths))
+              "ignored (Default: %d) [ENTER]\n" % (len(paths_to_print), default_max_paths)))
+    if (max_amount < 1):
+        max_amount = default_max_paths
+    if len(paths_to_print) < max_amount:
+        print("The %d most probable paths are:" % len(paths_to_print))
     else:
         print("The %d most probable paths are:" % max_amount)
-    for probable_paths in paths:
+    for probable_paths in paths_to_print:
         print("#%d: %s with %.2f%% probability" % (
-            counter_paths, probable_paths[:-1], get_percentage(paths.get(probable_paths))))
+            counter_paths, probable_paths[:-1], get_percentage(paths_to_print.get(probable_paths))))
         counter_paths += 1
         if counter_paths > max_amount:
             return
