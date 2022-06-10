@@ -17,6 +17,32 @@ class ActionPathNode:
     probability: Decimal
 
 
+def main() -> None:
+    pre_defined_features = 9
+    pre_defined_percentage = 20
+    pre_defined_print_path_entries = 10
+    pre_defined_csv_path = '../data_gen/scenario_data.csv'
+
+    try:
+        data_as_list_of_list = read_csv(define_csv_path(pre_defined_csv_path))
+    except:
+        print("An error occurred. Please check configuration and restart program")
+        sys.exit()
+
+    target_features = choose_amount_of_features(pre_defined_features)
+    target_percentage = choose_amount_of_percentage(pre_defined_percentage)
+    print(
+        "It will be searched for %d Features with a percentage of %d percent. It is possible that depending on the data "
+        "and the %% more or less features will be found \n Processing...\n" % (target_features, target_percentage))
+    relevant_items = get_relevant_items_from_list(data_as_list_of_list, target_features, target_percentage)
+    next_steps = determine_next_steps(relevant_items)
+    cleanData = new_dt_structure(data_as_list_of_list, relevant_items)
+    dt = decision_tree(cleanData)
+    probabilities = next_probable_action(next_steps, dt)
+    next_paths = next_probable_paths_list(dt, next_steps)
+    print_next_actions_and_paths(probabilities, next_paths, pre_defined_print_path_entries)
+
+
 def get_percentage(input_float):
     """
     :param input_float: inputs float value
@@ -342,25 +368,5 @@ def print_next_actions_and_paths(probabilities_to_print, paths_to_print, default
             return
 
 
-pre_defined_features = 9
-pre_defined_percentage = 20
-pre_defined_print_path_entries = 10
-pre_defined_csv_path = '../data_gen/scenario_data.csv'
-
-try:
-    data_as_list_of_list = read_csv(define_csv_path(pre_defined_csv_path))
-except:
-    print("An error occurred. Please check configuration and restart program")
-    sys.exit()
-
-target_features = choose_amount_of_features(pre_defined_features)
-target_percentage = choose_amount_of_percentage(pre_defined_percentage)
-print("It will be searched for %d Features with a percentage of %d percent. It is possible that depending on the data "
-      "and the %% more or less features will be found \n Processing...\n" % (target_features, target_percentage))
-relevant_items = get_relevant_items_from_list(data_as_list_of_list, target_features, target_percentage)
-next_steps = determine_next_steps(relevant_items)
-cleanData = new_dt_structure(data_as_list_of_list, relevant_items)
-dt = decision_tree(cleanData)
-probabilities = next_probable_action(next_steps, dt)
-next_paths = next_probable_paths_list(dt, next_steps)
-print_next_actions_and_paths(probabilities, next_paths, pre_defined_print_path_entries)
+if __name__ == "__main__":
+    main()
