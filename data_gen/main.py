@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import argparse
 import datetime
+import glob
 import json
 import os
 import random
@@ -62,7 +63,7 @@ def gen_data(json_file_name: str) -> list:
         entry = 'START'
         previous_entry = entry
         # Clone list
-        always_possible: list = data['*'][:]
+        always_possible = data['*'][:] if '*' in data else list()
 
         actions = []
 
@@ -89,7 +90,7 @@ def gen_data(json_file_name: str) -> list:
             next_entry_index = random.randrange(0, len(next_entries), 1)
             next_entry = next_entries[next_entry_index]
 
-            if entry not in data['*']:
+            if '*' in data and entry not in data['*']:
                 previous_entry = entry
 
             entry = next_entry
@@ -147,14 +148,18 @@ def gen_log(data, path) -> None:
     :param path: path for the log files
     """
 
+    if not os.path.isdir(path):
+        os.makedirs(path)
+    else:
+        files = glob.glob(path + '*')
+        for f in files:
+            os.remove(f)
+
     for line in data:
 
         delta_ms_30days = 1000 * 60 * 60 * 24 * 30
         delta_random_ms = random.randrange(0, delta_ms_30days, 1)
         logtime = datetime.datetime.now() - datetime.timedelta(milliseconds=delta_random_ms)
-
-        if not os.path.isdir(path):
-            os.makedirs(path)
 
         with open(path + logtime.isoformat() + '.log', 'w+') as output_file:
             for entry in line:
