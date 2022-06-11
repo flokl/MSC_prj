@@ -13,7 +13,7 @@ def main() -> None:
     data = []
 
     parser = argparse.ArgumentParser(description='Generate log files.')
-    parser.add_argument('-s', '--scenarios', dest='scenarios', nargs='+', default='phishingmail_entries',
+    parser.add_argument('-s', '--scenarios', dest='scenarios', nargs='+', default=['phishingmail_entries'],
                         help='scenario data as a directed graph')
     parser.add_argument('-n', '--amountoflogs', dest='amount', type=int, default=1000,
                         help='number of scenario logs that should be generated')
