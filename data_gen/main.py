@@ -1,25 +1,50 @@
 #!/usr/bin/env python
+import argparse
+import datetime
 import json
+import os
 import random
 
-SCENARIOS_OUTPUT_FILE = "scenario_data.csv"
-
-SCENARIOS = [
-    "phishingmail_entries.json",
-    "usbpackage_entries.json",
-    "softwareinstall_entries.json"
-]
+SCENARIO_PATH = 'scenarios/'
+LOG_PATH = 'logs/'
 
 
 def main() -> None:
     data = []
 
-    for i in range(1000):
-        actions = gen_data(SCENARIOS[0])
-        random_data = gen_random_data(len(actions[len(actions) - 1]))
-        data.append(mix_log_data(actions, random_data, int(len(random_data) * 0.8), 100))
+    parser = argparse.ArgumentParser(description='Generate log files.')
+    parser.add_argument('-s', '--scenarios', dest='scenarios', nargs='+', default='phishingmail_entries',
+                        help='scenario data as a directed graph')
+    parser.add_argument('-n', '--amountoflogs', dest='amount', type=int, default=1000,
+                        help='number of scenario logs that should be generated')
+    parser.add_argument('-b', '--maxbetween', dest='max_entries_between', type=int, required=False,
+                        help='max amount of random data getting mixed in between two data points')
+    parser.add_argument('--maxbetweenpercentage', dest='max_entries_between_percentage', type=float, default=0.8,
+                        help='max amount (as a percentage of total amount) of random data getting mixed in between '
+                             'two data points')
+    parser.add_argument('-p', '--mixprobability', dest='probability_between', type=float, default=100,
+                        help='probability random data gets mixed in between two data points')
+    parser.add_argument('-o', '--outfile', dest='output_file', type=str, default='scenario_data.csv',
+                        help='the output file of the generated data')
 
-    write_csv(SCENARIOS_OUTPUT_FILE, data)
+    args = parser.parse_args()
+
+    for i in range(args.amount):
+        actions = gen_data(args.scenarios[random.randrange(0, len(args.scenarios), 1)])
+        random_data = gen_random_data(len(actions[len(actions) - 1]))
+
+        if args.max_entries_between:
+            max_entries_between = args.max_entries_between
+        else:
+            max_entries_between = int(len(random_data) * args.max_entries_between_percentage)
+
+        data.append(mix_log_data(actions, random_data, max_entries_between, args.probability_between))
+
+    gen_log(data, LOG_PATH)
+
+    # Data processing
+    data_extracted = extract_from_log(LOG_PATH)
+    write_csv(args.output_file, data_extracted)
 
 
 def gen_data(json_file_name: str) -> list:
@@ -28,8 +53,10 @@ def gen_data(json_file_name: str) -> list:
     :param json_file_name: Directed graph of possible actions
     :return: list of generated data
     """
+    if not json_file_name.endswith('.json'):
+        json_file_name += '.json'
 
-    with open(json_file_name, "r") as jsonfile:
+    with open(SCENARIO_PATH + json_file_name, "r") as jsonfile:
         data = json.load(jsonfile)
 
         entry = 'START'
@@ -71,15 +98,6 @@ def gen_data(json_file_name: str) -> list:
         return actions
 
 
-def read_txt(filename: str) -> list:
-    data = []
-
-    with open(filename, 'r') as input_file:
-        data.append(input_file.readline())
-
-    return data
-
-
 def gen_random_data(amount: int) -> list:
     """
     Generates random log data
@@ -92,19 +110,6 @@ def gen_random_data(amount: int) -> list:
         random_data.append("randomevent" + str(random.randint(0, 1000)))
 
     return random_data
-
-
-# TODO Generate Logs
-# TODO Transform to csv
-# TODO Implement combined scenarios
-# TODO Zielwerte?
-
-def gen_log():
-    pass
-
-
-def extract_from_log():
-    pass
 
 
 def mix_log_data(log_data1: list, log_data2: list, max_entries_between: int, probability_between: int) -> list:
@@ -135,9 +140,50 @@ def mix_log_data(log_data1: list, log_data2: list, max_entries_between: int, pro
     return log_data_mixed
 
 
-def write_csv(filename: str, data: list) -> None:
+def gen_log(data, path) -> None:
+    """
+    Generate logs out of the created data. One file corresponds to one scenario simulation.
+    :param data: generated data
+    :param path: path for the log files
+    """
 
-    with open(filename, 'w') as output_file:
+    for line in data:
+
+        delta_ms_30days = 1000 * 60 * 60 * 24 * 30
+        delta_random_ms = random.randrange(0, delta_ms_30days, 1)
+        logtime = datetime.datetime.now() - datetime.timedelta(milliseconds=delta_random_ms)
+
+        if not os.path.isdir(path):
+            os.makedirs(path)
+
+        with open(path + logtime.isoformat() + '.log', 'w+') as output_file:
+            for entry in line:
+                delta_ms_5min = 1000 * 60 * 5
+                logtime += datetime.timedelta(milliseconds=random.randrange(0, delta_ms_5min, 1))
+                output_file.write(logtime.isoformat() + '\t' + entry + '\n')
+
+
+def extract_from_log(path) -> list(list()):
+    """
+    Extract all data from logs path without time
+    :param path: path to the lgo files
+    :return: 2d array, one line per log file
+    """
+    data = list()
+
+    files = os.listdir(path)
+    for file in files:
+        with open(path + file, 'r') as input_file:
+            scenario_data = list()
+            for line in input_file:
+                value = line.split('\t', 2)[1].strip()
+                scenario_data.append(value)
+        data.append(scenario_data)
+    return data
+
+
+def write_csv(filename: str, data: list) -> None:
+    with open(filename, 'w+') as output_file:
         for line in data:
             output_file.write(';'.join(line))
             output_file.write('\n')
