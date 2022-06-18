@@ -21,7 +21,7 @@ The main program can be found under `data_gen/decision_algorithm/decision_main.p
 After the start of the program, it is possible to enter the path to the csv. The default value will be printed and can be selected with `ENTER`.
 
 ### Define search parameters:
-The next options are that it is possible to define how many features are expected and in how many lines of the csv files each of these features is expected. This value will be defined in percent. There are also default values defined which can be selected with `ENTER`. These values are not fixed, and the program will dynamically adapt the values for best results, nevertheless with values that are near the results the processing time can be minimized.
+The next options are that it is possible to define how many features are expected and in how many elements of the csv files each of these features is expected. This value will be defined in percent. There are also default values defined which can be selected with `ENTER`. These values are not fixed, and the program will dynamically adapt the values for best results, nevertheless with values that are near the results the processing time can be minimized.
 
 After the search has been done the program will output which parameters it used to create the decision tree.
 
