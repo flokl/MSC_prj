@@ -97,7 +97,7 @@ def get_relevant_items_from_list(data, expected_features,
     :param percentage_of_relevant_data: Start point of percentage in how many scenarios a feature should be expected
     :return: extracted relevant features
     """
-    if percentage_of_relevant_data < 1:
+    if percentage_of_relevant_data <= 2:
         expected_features -= 1
         percentage_of_relevant_data = 100
     all_elements = [item for sublist in data for item in sublist]
@@ -107,7 +107,7 @@ def get_relevant_items_from_list(data, expected_features,
         count = all_elements.count(i)
         if count >= len(data) * (percentage_of_relevant_data / 100):
             relevant_items.append(i)
-    if len(relevant_items) < expected_features and percentage_of_relevant_data > 2:
+    if len(relevant_items) < expected_features and percentage_of_relevant_data > 1:
         relevant_items = get_relevant_items_from_list(data, expected_features, percentage_of_relevant_data - 1)
     else:
         print("Found %d Features. With a relevance of %d %%" % (len(relevant_items),
